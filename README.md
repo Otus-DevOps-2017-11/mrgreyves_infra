@@ -9,6 +9,7 @@
 На своей "машине" редактируем и редактируем файл ~/.ssh/config  
 Не забывал выставить права 600 на файл config  
 Так же не забываем включить Forward agent  
+Начиная с OpenSSH_7.3p1 можно использовать ProxyJymp вместо ProxyCommand
 ```
 Host bastion
 Hostname 35.187.126.40
@@ -26,6 +27,10 @@ ProxyCommand ssh bastion -W %h:%p
 ssh someinternalhost  
 
 ### Дополнительное задание:
+```
+ssh -o ProxyCommand='ssh -W %h:%p bastion' someinternalhost
+#Используем ProxyCommand
+```
 
 ```
 ssh -t bastion ssh someinternalhost  #Вариант для студентов:)
