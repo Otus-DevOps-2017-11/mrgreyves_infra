@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 apt update -y
 apt install -y build-essential ruby-full ruby-bundler
 apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
@@ -7,6 +7,7 @@ apt update -y
 apt install -y mongodb-org
 systemctl start mongod
 systemctl enable mongod
+cd /root
 git clone https://github.com/Otus-DevOps-2017-11/reddit.git
-cd ~/reddit/ && bundle install
+cd /root/reddit/ && bundle install
 puma -d
