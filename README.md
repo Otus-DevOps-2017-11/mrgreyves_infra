@@ -107,6 +107,6 @@ gcloud compute instances create reddit-app\
 --tags puma-server \
 --restart-on-failure \
 --zone=europe-west1-b \
---metadata startup-script-url=gs://hw6/Extra.sh
+--metadata "startup-script-url=gs://hw6/Extra.sh"
 ```
 В качестве startup-script используем скрипт который лежит в Storage в бакете hw6
