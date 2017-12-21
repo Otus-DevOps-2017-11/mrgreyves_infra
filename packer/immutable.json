@@ -26,6 +26,19 @@
          "type":"shell",
          "script":"scripts/deploy.sh",
          "execute_command":"sudo {{.Path}}"
-      }
+      },
+     {
+       "type":"file",
+       "source":"files/reddit_app.service",
+       "destination":"/tmp/"
+     },
+     {
+       "inline":[
+         "cd /tmp",
+         "sudo mv reddit_app.service /etc/systemd/system/reddit_app.service",
+         "systemctl enable reddit_app.service"
+       ],
+       "type": "shell"
+     }
    ]
 }
