@@ -1,7 +1,7 @@
 {
    "variables":{
-         "proj_id":"aerial-yeti-188613",
-         "source_image_family":"ubuntu-1604-lts",
+         "proj_id":"null",
+         "source_image_family":"null",
          "machine_type":"f1-micro"
    },
    "builders":[
