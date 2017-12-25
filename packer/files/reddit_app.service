@@ -1,0 +1,14 @@
+[Unit]
+Description=Reddit_app Otus DevOps
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/reddit/
+ExecStart=/usr/local/bin/puma
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

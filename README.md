@@ -110,3 +110,81 @@ gcloud compute instances create reddit-app\
 --metadata "startup-script-url=gs://hw6/Extra.sh"
 ```
 В качестве startup-script используем скрипт который лежит в Storage в бакете hw6
+
+
+## Otus DevOps Home Work 7 by Vladimir Drozdetskiy  
+
+1. Был создан файл для packer с описание образа ubuntu16.json  
+В нем так же были указаны переменные в блоке variables  
+
+```
+"proj_id":"aerial-yeti-188613",
+"source_image_family":"ubuntu-1604-lts",
+"machine_type":"f1-micro"
+
+```
+
+2. В файле ubuntu16.json были использованы параметры обозначающие жесткий диск,  
+теги, название сети, описание образа.  
+
+```
+"disk_size": "10",
+"disk_type":"pd-standard",
+"network":"default",
+"tags":["puma-server"],
+"image_description":"Otus DevOps HW_07 by VD"
+```
+
+PS: теги присваиваются образу в момент создания, потом они удаляются.  
+
+3. Задание со * 1
+Был создан файл для packer immutables.json. Образ собирается на основе ранее  
+созданного образа reddit-base. Для автозапуска приложению был создан сервис.  
+Так же была произведена первоначальная настройка.  
+Секция с описанием и установкой сервиса:  
+
+```
+{
+      "type":"file",
+      "source":"files/reddit_app.service",
+      "destination":"/tmp/"
+    },
+    {
+      "inline":[
+        "cd /tmp",
+        "sudo mv reddit_app.service /etc/systemd/system/reddit_app.service",
+        "systemctl enable reddit_app.service"
+
+```
+
+Сервис reddit_app.service  
+
+```
+[Unit]
+Description=Reddit_app Otus DevOps
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/reddit/
+ExecStart=/usr/local/bin/puma
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+4. Был создан простой скрипт который создает инстанс из ранее "запеченого" образа  
+
+```
+#!/bin/bash
+gcloud compute instances create "reddit-app" \
+--project "aerial-yeti-188613" \
+--zone "europe-west1-b" \
+--machine-type "f1-micro" \
+--subnet "default" --maintenance-policy "MIGRATE" \
+--tags "puma-server" --image-family reddit-full \
+--boot-disk-size "10" --boot-disk-type "pd-standard"
+```
