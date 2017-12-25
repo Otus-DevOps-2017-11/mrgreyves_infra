@@ -1,0 +1,4 @@
+project = "You project ID"
+public_key_path = "Path to public key"
+disk_image = "reddit-base"
+private_key_path = "Path to private key"
