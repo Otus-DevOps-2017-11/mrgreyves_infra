@@ -10,7 +10,7 @@
          "project_id":"{{user `proj_id`}}",
          "image_name":"reddit-full-{{timestamp}}",
          "image_family":"reddit-full",
-         "source_image_family":"{{user `source_image_family`}}",
+         "source_image_family":"reddit-base",
          "zone":"europe-west1-b",
          "ssh_username":"root",
          "machine_type":"{{user `machine_type`}}",
