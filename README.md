@@ -188,3 +188,87 @@ gcloud compute instances create "reddit-app" \
 --tags "puma-server" --image-family reddit-full \
 --boot-disk-size "10" --boot-disk-type "pd-standard"
 ```
+
+## Otus DevOps Home Work 8 by Vladimir Drozdetskiy
+
+1. Была опредлена input переменная для приватного ключа для подключения провиженеров  
+ в файле variables.tf
+
+```
+variable private_key_path {
+  description = "~/.ssh/appuser"
+}
+
+```
+
+2. Была опредлена переменная для задания зоны в ресурсе "google_compute_instance" "app"  
+в файле terraform.tfvars. В данном файле используются переменные заданные по умолчанию.  
+
+```
+zone = "europe-west1-b"
+```
+3. Было произведено форматирование конфигурационных файлов командой terraform fmt  
+Команда выравнила файлы.  
+Было:
+
+```
+provider "google" {
+version = "1.4.0"
+project = "${var.project}"
+region  = "${var.region}"
+}
+
+```
+
+Стало:
+
+```
+provider "google" {
+  version = "1.4.0"
+  project = "${var.project}"
+  region  = "${var.region}"
+}
+
+```
+
+4. Был создан файл terraform.tfvars.example в качестве примера.
+
+```
+project = "You project ID"
+public_key_path = "Path to public key"
+disk_image = "reddit-base"
+private_key_path = "Path to private key"
+```
+
+5. Задание со звездочкой 1
+Для добавления нескольких ключей можно использовать конструкцию
+
+```
+sshKeys = "user:${file(var.public_key_path)}*\n*user1:${file(var.public_key_path)}"
+```
+При этом будут добавлены 2 ключа. Поле metadata на сервере прдставляет на мой взгляд  
+строкое "поле" с ограничнным количеством символов. Третий ключ уже не поместится.
+При ручном добавлении ключа через консоль gcp terraform его затрет.
+Символ \n означает переност строки.
+
+6. Задание со звездочкой 2
+
+Согласно документации были определены параметры нашего балансировщика.  
+Количество хостов для балансировки трафика в моем случае 2.  
+Необходимо указать ряд ресурсов:  
+"google_compute_instance_group" "reddit-app" - указываем наши инстансы, (благодаря использованию
+  count настройка стала проще:)), уменованные порты (9292 в нашем случае), зону
+  где располагаются наши инстансы;
+"google_compute_global_forwarding_rule" "reddit-forward" - указываем с какого порта
+перенапрявлять трафик.  
+resource "google_compute_target_http_proxy" "reddit-proxy" - указываем наш proxy  
+resource "google_compute_url_map" "reddit-url-map" - указываем url-map для нашего backend  
+resource "google_compute_backend_service" "reddit-backend" - указываем на backend.  
+Так же указываем порт на котором живет наш сервис,протокол, health-check.  
+resource "google_compute_http_health_check" "reddit-health-check" - указываем параметры  
+health-check (проверка доступности). В моем случаем это интервал проверки 15с, таймаут 5с.  
+Так же указываем порт который проверяем. 
+
+PS: Использование count значительно облегчило создание нескольких инстансов.  
+Если по каким либо причинам мы не собирамся\не можем использовать count,  
+мы можем создать аналого main.tf с описанием еще одного\нескольких инстансов.
