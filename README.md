@@ -246,32 +246,33 @@ private_key_path = "Path to private key"
 ```
 sshKeys = "user:${file(var.public_key_path)}*\n*user1:${file(var.public_key_path)}"
 ```
-При этом будут добавлены 2 ключа. Поле metadata на сервере прдставляет на мой взгляд  
-строкое "поле" с ограничнным количеством символов. Третий ключ уже не поместится.
+При этом будут добавлены 2 ключа. Поле metadata на сервере имеет ограничение по объему.  
+Для ssh-keys это 256KB.
 При ручном добавлении ключа через консоль gcp terraform его затрет.
-Символ \n означает переност строки. Terraform НЕ умеет работать с шифрованными ключами
+Символ \n означает перенос строки. (в редакторе не влезает в строку)  
+Для добавления ключей я бы лучшу использовал Ansible и т.д.
 
 6. Задание со звездочкой 2
 
 Согласно документации были определены параметры нашего балансировщика.  
 Количество хостов для балансировки трафика в моем случае 2.  
 Необходимо указать ряд ресурсов:  
-"google_compute_instance_group" "reddit-app" - указываем наши инстансы, (благодаря использованию
+* resource "google_compute_instance_group" "app" - указываем наши инстансы, (благодаря использованию
   count настройка стала проще:)), уменованные порты (9292 в нашем случае), зону
   где располагаются наши инстансы;
-"google_compute_global_forwarding_rule" "reddit-forward" - указываем с какого порта
+* resource "google_compute_global_forwarding_rule" "forward-rule" - указываем с какого порта
 перенапрявлять трафик.  
-resource "google_compute_target_http_proxy" "reddit-proxy" - указываем наш proxy  
-resource "google_compute_url_map" "reddit-url-map" - указываем url-map для нашего backend  
-resource "google_compute_backend_service" "reddit-backend" - указываем на backend.  
+* resource "google_compute_target_http_proxy" "proxy-rule" - указываем наш proxy  
+* resource "google_compute_url_map" "app-url-map" - указываем url-map для нашего backend  
+* resource "google_compute_backend_service" "app-backend" - указываем на backend.  
 Так же указываем порт на котором живет наш сервис,протокол, health-check.  
-resource "google_compute_http_health_check" "reddit-health-check" - указываем параметры  
+* resource "google_compute_http_health_check" "app-health-check" - указываем параметры  
 health-check (проверка доступности). В моем случаем это интервал проверки 15с, таймаут 5с.  
 Так же указываем порт который проверяем.
 
 PS: Использование count значительно облегчило создание нескольких инстансов.  
 Если по каким либо причинам мы не собирамся\не можем использовать count,  
-мы можем создать аналого main.tf с описанием еще одного\нескольких инстансов.  
+мы можем создать аналогичный main.tf с описанием еще одного\нескольких инстансов.  
 Помимо всего была добавлена output переменная которая выдает адрес балансировщика  
 ```
 output "lb_ip" {
