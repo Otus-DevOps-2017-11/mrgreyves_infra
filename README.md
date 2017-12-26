@@ -235,9 +235,9 @@ provider "google" {
 
 ```
 project = "You project ID"
-public_key_path = "Path to public key"
+public_key_path = "~/.ssh/appuser.pub"
 disk_image = "reddit-base"
-private_key_path = "Path to private key"
+private_key_path = "~/.ssh/appuser"
 ```
 
 5. Задание со звездочкой 1
