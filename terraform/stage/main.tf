@@ -8,6 +8,7 @@ module "app" {
   source           = "../modules/app"
   public_key_path  = "${var.public_key_path}"
   private_key_path = "${var.private_key_path}"
+  db_address       = "${module.db.db_external_ip}"
   zone             = "${var.zone}"
   app_disk_image   = "${var.app_disk_image}"
 }
