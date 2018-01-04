@@ -482,3 +482,6 @@ terraform destroy
 ```
 
 Storage bucket удаляются
+
+
+### PS не забываем в prod окружении сменить ip в source ranges на свой:)
