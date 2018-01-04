@@ -321,6 +321,11 @@ output "lb_ip" {
 }
 
 ```
+Создаем образ  
+```
+packer build -var-file=variables.json app.json
+```
+
 Так же создан файл конфигурации db.json. В нем описывается создание образа с DB.  
 
 ```
@@ -357,7 +362,10 @@ output "lb_ip" {
 }
 
 ```
-
+Создаем образ  
+```
+packer build -var-file=variables.json db.json
+```
 Самостоятельные задания:  
 1. Были перенесены файлы main.tf, outputs.tf, terraform.tfvars, variables.tf  
 в директории с описание окружений prod и stage;    
