@@ -434,11 +434,17 @@ connection {
 ```
 
 Все необходимые файлы были добавлены в каталоги files для каждого модуля.  
-Так же была определена output переменная db_external_ip для модуля db.  
+Так же была определены output переменные для модуля db.  
 Нужна для передачи IP инстанса с бд в конфиг сервиса на инстансе с приложением.  
 
 ```
-db_address       = "${module.db.db_external_ip}"
+output "db_internal_ip" {
+  value = "${google_compute_instance.db.network_interface.0.network_ip}"
+}
+
+output "db_external_ip" {
+  value = "${google_compute_instance.db.network_interface.0.access_config.0.assigned_nat_ip}"
+}
 ```
 
 PS: было проверена работа с реестром модулей. Был создан storage bucket c   
@@ -492,4 +498,5 @@ terraform destroy
 Storage bucket удаляются
 
 
-### PS не забываем в prod окружении сменить ip в source ranges на свой:)
+### PS: не забываем в prod окружении сменить ip в source ranges на свой:)   
+### PSS: есть не очень очевидная особенность. Когда мы создаем 2 инстанса app и db, необходимо передавать в app внутренний ip адрес (internal) инстанса db для подключения к mongo, иначе firewall будет нас блокировать
