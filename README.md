@@ -499,4 +499,67 @@ Storage bucket удаляются
 
 
 ### PS: не забываем в prod окружении сменить ip в source ranges на свой:)   
-### PSS: есть не очень очевидная особенность. Когда мы создаем 2 инстанса app и db, необходимо передавать в app внутренний ip адрес (internal) инстанса db для подключения к mongo, иначе firewall будет нас блокировать
+### PSS: есть не очень очевидная особенность. Когда мы создаем 2 инстанса app и db, необходимо передавать в app внутренний ip адрес (internal) инстанса db для подключения к mongo, иначе firewall будет нас блокировать  
+
+
+## Otus DevOps Home Work 10 by Vladimir Drozdetskiy
+
+Была произведена инсталяция ansible согласно данным в ДЗ. Создан файл requirements.txt.  
+Были сформированы файлы inventory(json,yml) с описанием инстансов. Произведена проверка ping.  
+
+```
+username:~/devops/hw/10/mrgreyves_infra/ansible# ansible appserver -i ./inventory -m ping
+appserver | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+
+```
+
+```
+username:~/devops/hw/10/mrgreyves_infra/ansible# ansible dbserver -i ./inventory -m ping
+dbserver | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+```
+Проверка ping для всех инстансов сразу (используется файл с расширением yaml):  
+
+```
+username:~/devops/hw/10/mrgreyves_infra/ansible# ansible all -m ping -i inventory.yml
+dbserver | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+appserver | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+
+```
+
+### Задание со звездочкой *
+
+Была найдена статья в интернете с описанием создания файла inventory в формате   
+json [тут](https://www.jeffgeerling.com/blog/creating-custom-dynamic-inventories-ansible).  
+Просле ее прочтения и офф официальной документации узнал что ansible принимает  
+данные в формате json если "что-то" отправляет в stdout. В качетве образца был  
+использован скрипт [от сюда](https://gist.github.com/sivel/3c0745243787b9899486).  
+Произведены небольшие правки. Добавлена переменная на файл inventory на основе которого формируется  
+json.
+
+```
+inventory_file = "./inventory"
+```
+Произведено тестирование
+
+```
+username:~/devops/hw/10/mrgreyves_infra/ansible# ansible all -i ansible-to-json.py -m ping
+dbserver | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+appserver | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+```

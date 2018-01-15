@@ -1,0 +1,47 @@
+{
+    "_meta": {
+        "hostvars": {
+            "appserver": {
+                "ansible_host": "35.205.252.225", 
+                "inventory_dir": "/root/devops/hw/10/mrgreyves_infra/ansible", 
+                "inventory_file": "/root/devops/hw/10/mrgreyves_infra/ansible/inventory"
+            }, 
+            "dbserver": {
+                "ansible_host": "35.195.44.73", 
+                "inventory_dir": "/root/devops/hw/10/mrgreyves_infra/ansible", 
+                "inventory_file": "/root/devops/hw/10/mrgreyves_infra/ansible/inventory"
+            }
+        }
+    }, 
+    "all": {
+        "children": [
+            "ungrouped", 
+            "db", 
+            "app"
+        ], 
+        "hosts": [
+            "appserver", 
+            "dbserver"
+        ], 
+        "vars": {}
+    }, 
+    "app": {
+        "children": [], 
+        "hosts": [
+            "appserver"
+        ], 
+        "vars": {}
+    }, 
+    "db": {
+        "children": [], 
+        "hosts": [
+            "dbserver"
+        ], 
+        "vars": {}
+    }, 
+    "ungrouped": {
+        "children": [], 
+        "hosts": [], 
+        "vars": {}
+    }
+}
