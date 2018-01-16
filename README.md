@@ -279,3 +279,224 @@ output "lb_ip" {
   value = "${google_compute_global_forwarding_rule.reddit-forward.ip_address}"
 }
 ```
+
+
+## Otus DevOps Home Work 9 by Vladimir Drozdetskiy
+
+В данном ДЗ были переделаны образы при помощи packer.  
+Был создан файл конфигурации app.json в котором описывается создание образа  
+с приложением.  
+
+```
+{
+   "variables":{
+         "proj_id":null,
+         "source_image_family":null,
+         "machine_type":"f1-micro"
+   },
+   "builders":[
+      {
+         "type":"googlecompute",
+         "project_id":"{{user `proj_id`}}",
+         "image_name":"reddit-app-base-{{timestamp}}",
+         "image_family":"reddit-app-base",
+         "source_image_family":"{{user `source_image_family`}}",
+         "zone":"europe-west1-b",
+         "ssh_username":"appuser",
+         "machine_type":"{{user `machine_type`}}",
+         "disk_size": "10",
+         "disk_type":"pd-standard",
+         "network":"default",
+         "tags":["puma-server"],
+         "image_description":"Otus DevOps HW_09 App by VD"
+      }
+   ],
+   "provisioners":[
+      {
+         "type":"shell",
+         "script":"scripts/install_ruby.sh",
+         "execute_command":"sudo {{.Path}}"
+      }
+   ]
+}
+
+```
+Создаем образ  
+```
+packer build -var-file=variables.json app.json
+```
+
+Так же создан файл конфигурации db.json. В нем описывается создание образа с DB.  
+
+```
+{
+   "variables":{
+         "proj_id":null,
+         "source_image_family":null,
+         "machine_type":"f1-micro"
+   },
+   "builders":[
+      {
+         "type":"googlecompute",
+         "project_id":"{{user `proj_id`}}",
+         "image_name":"reddit-db-base-{{timestamp}}",
+         "image_family":"reddit-db-base",
+         "source_image_family":"{{user `source_image_family`}}",
+         "zone":"europe-west1-b",
+         "ssh_username":"appuser",
+         "machine_type":"{{user `machine_type`}}",
+         "disk_size": "10",
+         "disk_type":"pd-standard",
+         "network":"default",
+         "tags":["puma-server"],
+         "image_description":"Otus DevOps HW_09 DB by VD"
+      }
+   ],
+   "provisioners":[
+      {
+         "type":"shell",
+         "script":"scripts/install_mongodb.sh",
+         "execute_command":"sudo {{.Path}}"
+      }
+   ]
+}
+
+```
+Создаем образ  
+```
+packer build -var-file=variables.json db.json
+```
+Самостоятельные задания:  
+1. Были перенесены файлы main.tf, outputs.tf, terraform.tfvars, variables.tf  
+в директории с описание окружений prod и stage;    
+2. Была произведена параметризация окружений;  
+3. Произведено форматирование при помощи команды
+
+```
+terraform fmt  
+```
+
+Задание со звездочкой 1  
+Был создан remote backend на Google Cloud Storage по данному [мануалу](https://www.terraform.io/docs/backends/types/gcs.html)  
+для окружения prod.
+```
+terraform {
+  backend "gcs" {
+    bucket = "hw9"
+  }
+}
+```  
+Где bucket = "hw9" это созданный бакет в GCS. При одновременном запуске применения  
+изменений возникает блокировка.
+
+Задание со здвездочкой 2  
+
+Были добавлены необходимые провиженеры в модули app и db.  
+Для app:
+
+```
+provisioner "file" {
+    content     = "${data.template_file.pumaservice.rendered}"
+    destination = "/tmp/puma.service"
+  }
+
+  provisioner "remote-exec" {
+    script = "${path.module}/files/deploy.sh"
+  }
+
+```
+
+Для db:
+
+```
+provisioner "file" {
+    content     = "${data.template_file.mongod-config.rendered}"
+    destination = "/tmp/mongod.conf"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mv /tmp/mongod.conf /etc/mongod.conf",
+      "sudo systemctl restart mongod",
+    ]
+  }
+
+```
+
+Не забываем указывать connection для провиженеров. Они одинаковые для app и db.  
+
+```
+connection {
+    type        = "ssh"
+    user        = "appuser"
+    private_key = "${file(var.private_key_path)}"
+  }
+```
+
+Все необходимые файлы были добавлены в каталоги files для каждого модуля.  
+Так же была определены output переменные для модуля db.  
+Нужна для передачи IP инстанса с бд в конфиг сервиса на инстансе с приложением.  
+
+```
+output "db_internal_ip" {
+  value = "${google_compute_instance.db.network_interface.0.network_ip}"
+}
+
+output "db_external_ip" {
+  value = "${google_compute_instance.db.network_interface.0.access_config.0.assigned_nat_ip}"
+}
+```
+
+PS: было проверена работа с реестром модулей. Был создан storage bucket c   
+содержимым:
+
+```
+provider "google" {
+  version = "1.4.0"
+  project = "${var.project}"
+  region  = "${var.region}"
+}
+
+module "storage-bucket" {
+  source  = "SweetOps/storage-bucket/google"
+  version = "0.1.1"
+  name    = ["otus-hw-dv-001", "otus-hw-dv-002"]
+}
+
+output storage-bucket_url {
+  value = "${module.storage-bucket.url}"
+}
+
+```
+
+Так же был создан файл с переменными variables.tf:
+
+```
+variable project {
+  description = "PROJECT ID"
+}
+
+variable region {
+  description = "Region"
+  default     = "europe-west1"
+}
+
+```
+
+При использовании команды  
+
+```
+terraform apply
+```
+создается 2 storage bucket с именами otus-hw-dv-001", "otus-hw-dv-002.  
+При использовании
+
+```
+terraform destroy
+```
+
+Storage bucket удаляются
+
+
+### PS: не забываем в prod окружении сменить ip в source ranges на свой:)   
+### PSS: есть не очень очевидная особенность. Когда мы создаем 2 инстанса app и db, необходимо передавать в app внутренний ip адрес (internal) инстанса db для подключения к mongo, иначе firewall будет нас блокировать
