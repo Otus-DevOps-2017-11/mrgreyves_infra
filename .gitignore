@@ -4,3 +4,6 @@ variables.json
 *.tfstate.backup
 *.tfvars
 .terraform/
+*.retry
+project.json
+.DS_store
