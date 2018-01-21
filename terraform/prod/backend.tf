@@ -1,5 +1,5 @@
-terraform {
-  backend "gcs" {
-    bucket = "hw9"
-  }
-}
+#terraform {
+#  backend "gcs" {
+#    bucket = "hw9"
+#  }
+#}
