@@ -44,7 +44,7 @@ before_script:
 
 script:
   - cd ${WD}/packer
-  - /home/travis/bin/packer validate --var-file=variables.json.example packer/db.json
+  - /home/travis/bin/packer validate --var-file=variables.json.example db.json
   - cd ${WD}/ansible
   - test -f playbooks/site.yml
   - ansible-lint playbooks/site.yml
