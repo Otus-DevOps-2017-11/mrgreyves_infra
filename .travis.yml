@@ -38,6 +38,7 @@ before_script:
     project = "infra-188921"
     public_key_path = "~/.ssh/appuser.pub"
     private_key_path = "~/.ssh/appuser"
+    disk_image = "reddit-base"
     EOF
   - cat ./terraform.tfvars
   - cp ./terraform.tfvars ../prod/
