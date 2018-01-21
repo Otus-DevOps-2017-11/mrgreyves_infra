@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/Otus-DevOps-2017-11/mrgreyves_infra.svg?branch=ansible-3)](https://travis-ci.org/Otus-DevOps-2017-11/mrgreyves_infra)
 ## Otus DevOps Home Work 5 by Vladimir Drozdetskiy
 
 ### Стенд:
@@ -643,3 +644,129 @@ reddit-db | SUCCESS => {
 
 PS: во время проверки не забываем проверить файлы пакера app.json, db.json и в случае необходимости  
 переопределить пути до плейбуков ansible. 
+
+## Otus DevOps Home Work 12 by Vladimir Drozdetskiy
+
+В данном ДЗ мы создали наши роли (app, db) и пересни их в одноименные папки.  
+Так же в terraform было добавлено правило для открытия 80 порта для проверки нашего приложения.  
+
+```
+
+resource "google_compute_firewall" "firewall_nginx_proxy_80" {
+  name    = "allow-nginx-proxi"
+  network = "default"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["reddit-app"]
+}
+
+```
+
+Был добавлен вызов публичной роли jdauphant.nginx в плейбук app.yml
+
+```
+
+---
+- name: Configure app
+  hosts: app
+  become: true
+  vars:
+   db_host: ip address
+  roles:
+    - app
+    - jdauphant.nginx
+
+```
+
+Был применен плейбук site.yml и проверена доступность нашего приложения по 80 порту
+
+```
+
+ansible-playbook -i environments/stage/inventory  playbooks/site.yml --check
+
+```
+
+```
+
+appserver                  : ok=20   changed=0    unreachable=0    failed=0
+dbserver                   : ok=3    changed=0    unreachable=0    failed=0
+
+```
+
+Проверка доступности нашего приложения по 80 порту
+
+```
+
+curl -Is http://35.205.70.81
+
+```
+
+```
+
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sun, 21 Jan 2018 17:47:29 GMT
+Content-Type: text/html;charset=utf-8
+Content-Length: 1861
+Connection: keep-alive
+X-XSS-Protection: 1; mode=block
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+Set-Cookie: rack.session=BAh7CEkiD3Nlc3Npb25faWQGOgZFVEkiRWNmYTdjNTM3OTQ0OTVlMDY1ZjVi%0ANGYxYmNiNmI0MGZmNmU2YTdmYTFjZGY4Nzg1MTYyZjhjMGUxNGE2MTdlYzIG%0AOwBGSSIJY3NyZgY7AEZJIjExR0swTWRRWWRvcTdZelB5b2dwSTFlUzRQQ1ZS%0AVTY2QUN4ajU3c1I0eHJZPQY7AEZJIg10cmFja2luZwY7AEZ7B0kiFEhUVFBf%0AVVNFUl9BR0VOVAY7AFRJIi01NmMxYTdkOWI2YjdjZjUyMTdkNTk1YjM4MjVm%0AZDc4MjI5MmIyNGNjBjsARkkiGUhUVFBfQUNDRVBUX0xBTkdVQUdFBjsAVEki%0ALWRhMzlhM2VlNWU2YjRiMGQzMjU1YmZlZjk1NjAxODkwYWZkODA3MDkGOwBG%0A--d7d6f460bb67353cc571d5e2929948ea605101e2; path=/; HttpOnly
+
+```
+
+
+### Задание со звездочкой *
+
+При выполнении этого задания было решено использовать terraform-inventory.  
+Был найден [репозиторий](https://github.com/adammck/terraform-inventory) с описанием установки и использования.  
+Есть маленькая особенноть, получить список инстансов terraform-inventory может если в папке находится файл  
+terraform.tfstate. После это бы написан скрипт.
+
+```
+
+#!/usr/bin/env bash
+env="stage"
+TF_STATE=../terraform/${env}/terraform.tfstate terraform-inventory $1
+
+```
+
+Скрипт был проверен для всех окружений, отработал корректно.  
+
+```
+
+ansible-playbook -i environments/stage/terraform_inventory.sh playbooks/site.yml --check
+
+```
+
+```
+
+35.189.241.104             : ok=3    changed=0    unreachable=0    failed=0
+35.205.70.81               : ok=20   changed=0    unreachable=0    failed=0
+
+```
+
+
+### Задание со звездочкой **
+
+Был создан файл .travis.yml в котором описано тестирование. Не забываем указывать с какой веткой работаем.  
+Есть особенность если какая то комманда отправлет на выходе exit code  отличный от 0 билд получется с ошибкой.  
+Не забываем так же указывать переменные для терраформа, инача terraform validate не пройдет.  
+Так же необходимо следить за путями приложений и файлов.  
+Наткнулся на один момент, так как у меня в terraform длф окружения stage используется backend,  
+travis не мог получить к нему доступ и вывалился с ошибкой, пришлось за комментировать строки в нем.  
+После этого билд прошел корректно.
+
+Код бейджа для репозитория:
+
+```
+
+[![Build Status](https://travis-ci.org/Otus-DevOps-2017-11/mrgreyves_infra.svg?branch=ansible-3)](https://travis-ci.org/Otus-DevOps-2017-11/mrgreyves_infra)
+
+```
