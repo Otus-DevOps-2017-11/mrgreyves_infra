@@ -48,7 +48,7 @@ script:
   - cd ${WD}/ansible
   - test -f playbooks/site.yml
   - ansible-lint playbooks/site.yml
-  - cd ${WD}/terraform/stage && terraform init && terraform validate
+  - cd ${WD}/terraform/stage && terraform init
   - tflint --error-with-issues
-  - cd ${WD}/terraform/prod && terraform init && terraform validate
+  - cd ${WD}/terraform/prod && terraform init
   - tflint --error-with-issues
