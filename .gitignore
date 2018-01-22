@@ -7,3 +7,4 @@ variables.json
 *.retry
 project.json
 .DS_store
+jdauphant.nginx

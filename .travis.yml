@@ -1,0 +1,59 @@
+---
+sudo: required
+dist: trusty
+
+language: python
+python: "2.7"
+
+branches:
+  only:
+  - master
+  - ansible-3
+
+before_install:
+  - sudo rm -vf /etc/apt/sources.list.d/*riak*
+  - sudo apt -qq update
+  - pwd
+
+install:
+  - sudo apt -y install wget
+  - wget https://releases.hashicorp.com/packer/1.1.3/packer_1.1.3_linux_amd64.zip
+  - mkdir -p /home/travis/bin
+  - unzip packer_1.1.3_linux_amd64.zip -d /home/travis/bin/
+  - sudo -H pip install -r ansible/requirements.txt
+  - sudo -H pip install ansible-lint
+  - wget https://releases.hashicorp.com/terraform/0.11.1/terraform_0.11.1_linux_amd64.zip
+  - unzip terraform_0.11.1_linux_amd64.zip -d /home/travis/bin/
+  - wget https://github.com/wata727/tflint/releases/download/v0.5.4/tflint_linux_amd64.zip
+  - unzip tflint_linux_amd64.zip -d /home/travis/bin/
+
+before_script:
+  - /home/travis/bin/packer --version
+  - pwd
+  - WD=$(pwd)
+  - touch ~/.ssh/appuser.pub && touch ~/.ssh/appuser
+  - cd ${WD}/terraform/stage
+  - |
+    cat > ./terraform.tfvars << '  EOF'
+    project = "infra-188921"
+    public_key_path = "~/.ssh/appuser.pub"
+    private_key_path = "~/.ssh/appuser"
+    disk_image = "reddit-base"
+    EOF
+  - cat ./terraform.tfvars
+  - cp ./terraform.tfvars ../prod/
+
+script:
+  - cd ${WD}/packer
+  - /home/travis/bin/packer validate --var-file=variables.json.example db.json
+  - cd ${WD}/ansible
+  - test -f playbooks/site.yml
+  - ansible-lint playbooks/site.yml
+  - cd ${WD}/terraform/stage
+  - terraform init
+  - terraform validate
+  - tflint --error-with-issues
+  - cd ${WD}/terraform/prod
+  - terraform init
+  - terraform validate
+  - tflint --error-with-issues
