@@ -563,3 +563,83 @@ appserver | SUCCESS => {
     "ping": "pong"
 }
 ```
+## Otus DevOps Home Work 11 by Vladimir Drozdetskiy
+
+Был создан файл inventory в котором указаны ip адреса наших инстансов
+
+```
+[app]
+appserver ansible_host=app ip
+
+[db]
+dbserver ansible_host=db ip
+
+```
+Так же был создан файл inventory.yml, инаформация описанная в нем аналогична.
+
+Были созданы плейбуки в которых описывается диплой и настройка приложения,  
+настройка инстанса БД mongodb
+
+reddit_app_one_play.yml и reddit_app_multiple_play.yml - внутри созданы такс с тегами  
+для применения определенных плеев. При указании тегов во время выполнения  
+можно тем самым указать какой плей выполнить.
+Так же были созданы плейбуки в которых описывается настройка бд (db.yml), настройка приложения (app.yml),  
+установка приложения (deploy.yml)
+Все отдельные плейбуки (app.yml, db.yml, deploy.yml) были испортированы в плейбук site.yml
+
+
+```
+
+---
+- import_playbook: db.yml
+- import_playbook: app.yml
+- import_playbook: deploy.yml
+
+```
+
+Все плейбуки прошли проверку и применились на нужных инстансах.
+
+### Задание со звездочкой *
+
+
+При чтении [официальной документации](http://docs.ansible.com/ansible/latest/guide_gce.html)  
+выяснил что Ansible у меня создавать динамический inventory. Из [официального репозитория](https://github.com/ansible/ansible/)  
+были взяты файлы gce.ini и gce.py. Gce.py создает динамический inventory и выводит его в stdoud в формате json  
+который понятен ansible. Был создан сервис аккаунт в gcp и получены данные для подключения. Файл gce.ini описывает  
+подключение к gcp
+
+```
+gce_service_account_email_address =service account email
+gce_service_account_pem_file_path =key.json
+gce_project_id =project-id
+
+```
+
+Так же для работы скрипта необходимо было установить apache-libcloud
+
+```
+pip install apache-libcloud
+
+```
+
+#### При использовании gce.py необходимо использовать gce.ini
+
+```
+username:ansible vladimirdrozdeckij$ ansible all -i ./gce.py -m ping
+reddit-app | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+reddit-db | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+
+```
+
+Были изменен провижин в packer путем добавление в него плейбуко ansible.  
+Образы пересоздались корректно. Произведена проверка установки/настройки приложения  
+и бд. Все корректно, посты создаются.
+
+PS: во время проверки не забываем проверить файлы пакера app.json, db.json и в случае необходимости  
+переопределить пути до плейбуков ansible. 
