@@ -4,6 +4,7 @@
     src: puma.service.j2
     dest: /etc/systemd/system/puma.service
   notify: reload puma
+  tags: puma
 
 - name: Add config for DB connection
   template:
@@ -11,6 +12,8 @@
     dest: "/home/{{ deploy_user }}/db_config"
     owner: "{{ deploy_user }}"
     group: "{{ deploy_user }}"
+  tags: puma
 
 - name: enable puma
   systemd: name=puma enabled=yes
+  tags: puma

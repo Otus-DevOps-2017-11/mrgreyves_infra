@@ -33,17 +33,17 @@ resource "google_compute_instance" "db" {
     private_key = "${file(var.private_key_path)}"
   }
 
-  provisioner "file" {
-    content     = "${data.template_file.mongod-config.rendered}"
-    destination = "/tmp/mongod.conf"
-  }
+//  provisioner "file" {
+//    content     = "${data.template_file.mongod-config.rendered}"
+//    destination = "/tmp/mongod.conf"
+//  }
 
-  provisioner "remote-exec" {
-    inline = [
-      "sudo mv /tmp/mongod.conf /etc/mongod.conf",
-      "sudo systemctl restart mongod",
-    ]
-  }
+//  provisioner "remote-exec" {
+//    inline = [
+//      "sudo mv /tmp/mongod.conf /etc/mongod.conf",
+//      "sudo systemctl restart mongod",
+//    ]
+//  }
 }
 
 resource "google_compute_firewall" "firewall_mongo" {
