@@ -8,3 +8,10 @@ variables.json
 project.json
 .DS_store
 jdauphant.nginx
+env
+# Vagrant & molecule
+.vagrant/
+*.log
+*.pyc
+.molecule
+.cache
