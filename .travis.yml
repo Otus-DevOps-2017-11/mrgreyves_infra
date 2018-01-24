@@ -35,7 +35,7 @@ before_script:
   - cd ${WD}/terraform/stage
   - |
     cat > ./terraform.tfvars << '  EOF'
-    project = "infra-188921"
+    project = "infra-123456"
     public_key_path = "~/.ssh/appuser.pub"
     private_key_path = "~/.ssh/appuser"
     disk_image = "reddit-base"
