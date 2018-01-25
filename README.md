@@ -770,3 +770,113 @@ travis не мог получить к нему доступ и вывалилс
 [![Build Status](https://travis-ci.org/Otus-DevOps-2017-11/mrgreyves_infra.svg?branch=ansible-3)](https://travis-ci.org/Otus-DevOps-2017-11/mrgreyves_infra)
 
 ```
+
+## Otus DevOps Home Work 13 by Vladimir Drozdetskiy
+
+Во время выполнения ДЗ было создано локально окружение для установки molecule,  
+ansible, Test Infra
+
+```
+virtualenv -p python2.7 path/to/folder
+```
+
+Так же был создан Vagrant файл с описание инфраструктуры Vagrant
+
+```
+вагрант файл
+```
+
+Используемые команды:
+```
+vagrant box list
+#просмотр скачанных боксов
+vagrant Status
+#просмотр статуса инстансов
+vagrant ssh instance_name
+#подключение по ssh к нужному инстансу
+vagrant provision instance_name
+#запуск провиженеров на конкретном инстансе
+cat .vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory  
+#просмотр инвентори vagrant (генерируется динамически)
+vagrant destroy -f
+#разбираем наше окружение
+vagrant up
+#поднимаем окружение, запускаем в директории с Vagrant file
+```
+
+В vagrant файле так же были использованы провиженеры:
+```
+db.vm.provision "ansible" do |ansible| #определение провиженера
+      ansible.playbook = "playbooks/site.yml"#нужный плейбук
+      ansible.groups = {
+      "db" => ["dbserver"],
+      "db:vars" => {"mongo_bind_ip" => "0.0.0.0"}#группы хостов и переменные
+      }
+    end
+```
+
+Было произведено тестирование роли при помощи molecule.
+В директории roles/db была выполнена комманда:  
+```
+molecule init scenario --scenario-name default -r db -d vagrant
+#vagrant драйвер для создания вм
+```
+
+Был оформлен файл test_default.py с тестированием при помощи модуля Testinfra:  
+```
+import os
+
+import testinfra.utils.ansible_runner
+
+testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
+    os.environ['MOLECULE_INVENTORY_FILE']).get_hosts('all')
+
+# check if MongoDB is enabled and running
+def test_mongo_running_and_enabled(host):
+    mongo = host.service("mongod")
+    assert mongo.is_running
+    assert mongo.is_enabled
+
+# check if configuration file contains the required line
+def test_config_file(File):
+    config_file = File('/etc/mongod.conf')
+    assert config_file.contains('bindIp: 0.0.0.0')
+    assert config_file.is_file
+```
+
+Используемые команды molecule:
+
+```
+molecule create
+#создание инстанса для проверки роли
+molecule list
+#список созданных инстансов
+molecule login -h instance_name
+#подключение в нужному инстансу по ssh
+molecule converge
+#применение плейбука playbook.yml из директории molecule/default/
+molecule verify
+#запуск тестов
+```
+
+Были указаны теги на уровне плейбуков и в шаблоне пакера:  
+
+```
+"extra_arguments": ["--tags","ruby"]
+```
+
+Так же был настроен путь для пакера ролям ansible
+
+```
+"ansible_env_vars": ["ANSIBLE_ROLES_PATH=../ansible/roles"]
+```
+Образы собрались без проблем
+
+### Задание со *
+
+В файл test_default.py была добавлена дополнительная проверка что БД слушает нужный нам порт:  
+```
+def test_socket_listening(Socket):
+    socket = Socket('tcp://0.0.0.0:27017')
+    assert socket.is_listening
+```
